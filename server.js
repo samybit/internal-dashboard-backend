@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 
 import teamRoutes from './routes/teamRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import { protect } from './middleware/authMiddleware.js';
 
 dotenv.config();
 
@@ -14,9 +16,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/team', teamRoutes);
-app.use('/api/invoices', invoiceRoutes);
+// Public Route
+app.use('/api/auth', authRoutes);
+
+// Protected Routes (Notice the `protect` function inserted before the router)
+app.use('/api/team', protect, teamRoutes);
+app.use('/api/invoices', protect, invoiceRoutes);
 
 // MongoDB Connection
 const PORT = process.env.PORT || 5000;
