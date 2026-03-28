@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import TeamMember from './models/TeamMember.js';
 import Invoice from './models/Invoice.js';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -38,12 +39,21 @@ const seedDatabase = async () => {
         await Invoice.deleteMany({});
         console.log('Cleared existing database collections.');
 
-        // 3. Insert the mock data
-        await TeamMember.insertMany(mockTeamData);
-        await Invoice.insertMany(mockInvoices);
-        console.log('Successfully seeded database with mock data.');
+        // 1. Generate a salt and hash the default password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('password123', salt);
 
+        // 2. Map through the mock data and inject the hashed password
+        const teamWithPasswords = mockTeamData.map(member => ({
+            ...member,
+            password: hashedPassword
+        }));
+
+        // 3. Insert the new data
+        await TeamMember.insertMany(teamWithPasswords);
+        await Invoice.insertMany(mockInvoices);
         // 4. Exit the process
+        console.log('Successfully seeded database with mock data and hashed passwords.');
         process.exit();
     } catch (error) {
         console.error('Error seeding database:', error);
